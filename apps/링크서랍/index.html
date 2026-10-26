@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e0e11">
+<title>링크서랍</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg:#fff; --fg:#17171a; --dim:#6b6b73; --line:#e3e3e8;
+    --card:#fafafa; --chip:#f0f0f3; --on:#17171a; --onfg:#fff; --bad:#b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0e0e11; --fg:#ececf0; --dim:#9a9aa4; --line:#26262c;
+            --card:#17171b; --chip:#23232a; --on:#ececf0; --onfg:#0e0e11; --bad:#f2b8b5; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:20px 16px 48px; background:var(--bg); color:var(--fg);
+         font:16px/1.6 system-ui, "Malgun Gothic", sans-serif;
+         -webkit-text-size-adjust:100%; }
+  main { max-width:620px; margin:0 auto; }
+
+  a.back { display:inline-block; color:var(--dim); font-size:.85rem; text-decoration:none; }
+  h1 { margin:8px 0 2px; font-size:1.45rem; letter-spacing:-.01em; }
+  p.sub { margin:0 0 16px; color:var(--dim); font-size:.85rem; }
+
+  button, input, textarea { font:inherit; color:inherit; }
+  button { min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:10px;
+           background:transparent; cursor:pointer; }
+  button:hover { border-color:var(--dim); }
+  button.go { background:var(--on); color:var(--onfg); border-color:var(--on); font-weight:600; }
+  button.small { min-height:36px; padding:0 10px; font-size:.85rem; }
+  button.bad { color:var(--bad); }
+
+  .bar { display:flex; gap:8px; margin-bottom:12px; }
+  .bar input { flex:1; min-height:44px; padding:0 12px; border:1px solid var(--line);
+               border-radius:10px; background:var(--card); }
+
+  #tagbar { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 14px; }
+  #tagbar:empty { display:none; }
+  .tag { min-height:34px; padding:0 11px; border-radius:999px; border:1px solid var(--line);
+         background:var(--chip); font-size:.85rem; cursor:pointer; }
+  .tag[aria-pressed="true"] { background:var(--on); color:var(--onfg); border-color:var(--on); }
+  .tag .n { color:var(--dim); margin-left:4px; font-size:.78rem; }
+  .tag[aria-pressed="true"] .n { color:inherit; opacity:.65; }
+
+  #list { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
+  li.row { padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:var(--card); }
+  li.row .t { display:block; font-weight:600; color:inherit; text-decoration:none; overflow-wrap:anywhere; }
+  li.row .t:hover { text-decoration:underline; }
+  li.row .host { display:block; color:var(--dim); font-size:.8rem; overflow-wrap:anywhere; }
+  li.row .note { margin:6px 0 0; color:var(--dim); font-size:.88rem; white-space:pre-wrap; }
+  li.row .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+  li.row .tags span { padding:2px 8px; border-radius:999px; background:var(--chip);
+                      color:var(--dim); font-size:.78rem; }
+  li.row .acts { display:flex; gap:6px; margin-top:10px; }
+
+  .empty { padding:20px 16px; border:1px dashed var(--line); border-radius:12px;
+           color:var(--dim); text-align:center; }
+
+  #panel { margin:0 0 14px; padding:14px; border:1px solid var(--line); border-radius:12px;
+           background:var(--card); display:grid; gap:10px; }
+  #panel[hidden] { display:none; }
+  #panel label { display:grid; gap:4px; font-size:.85rem; color:var(--dim); }
+  #panel input, #panel textarea { padding:9px 11px; border:1px solid var(--line);
+                                  border-radius:9px; background:var(--bg); }
+  #panel textarea { min-height:64px; resize:vertical; }
+  #panel .btns { display:flex; gap:8px; }
+  #panel .btns button { flex:1; }
+
+  footer { margin-top:28px; padding-top:16px; border-top:1px solid var(--line); }
+  footer .btns { display:flex; flex-wrap:wrap; gap:8px; }
+  footer p { margin:10px 0 0; color:var(--dim); font-size:.8rem; }
+  #msg:empty { display:none; }
+  #msg { margin-top:10px; padding:9px 12px; border:1px solid var(--line);
+         border-radius:9px; font-size:.85rem; }
+
+  @media (max-width: 420px) {
+    footer .btns button { flex:1 1 calc(50% - 4px); }
+  }
+</style>
+
+<body>
+<main>
+  <a class="back" href="../../">← 목록</a>
+  <h1>링크서랍</h1>
+  <p class="sub">링크를 모아 두고 태그로 꺼냅니다.</p>
+
+  <div class="bar">
+    <input id="q" type="search" placeholder="제목·주소·메모·태그 찾기" autocomplete="off">
+    <button id="add" class="go">＋</button>
+  </div>
+
+  <form id="panel" hidden>
+    <label>주소
+      <input id="f-url" type="url" inputmode="url" placeholder="https://..." required>
+    </label>
+    <label>제목
+      <input id="f-title" type="text" placeholder="비우면 주소에서 가져옵니다">
+    </label>
+    <label>태그 — 쉼표로 나눕니다
+      <input id="f-tags" type="text" placeholder="규조, 도감">
+    </label>
+    <label>메모
+      <textarea id="f-note" placeholder="(없어도 됩니다)"></textarea>
+    </label>
+    <div class="btns">
+      <button type="submit" class="go" id="f-save">넣기</button>
+      <button type="button" id="f-cancel">그만</button>
+    </div>
+  </form>
+
+  <div id="tagbar"></div>
+  <ul id="list"></ul>
+
+  <footer>
+    <div class="btns">
+      <button class="small" id="export">data.js 로 내보내기</button>
+      <button class="small" id="import">파일에서 불러오기</button>
+      <button class="small bad" id="reset">처음 자료로 되돌리기</button>
+    </div>
+    <div id="msg" role="status"></div>
+    <p>
+      누르면 <b>일반 새 탭</b>에서 엽니다. 시크릿으로 열려면 링크를
+      <b>길게 누르거나(휴대폰) 우클릭해서(PC)</b> 「시크릿 탭에서 열기」를 고르십시오 —
+      웹페이지가 시크릿 탭을 직접 열 수는 없습니다.
+    </p>
+    <p>
+      고친 것은 이 브라우저에 남습니다. 다른 기기로 옮기거나 저장소에 넣으려면
+      「내보내기」로 받은 <code>data.js</code> 를 이 앱 폴더에 덮으십시오.
+    </p>
+  </footer>
+</main>
+
+<input id="file" type="file" accept=".js,.json,text/javascript,application/json" hidden>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
