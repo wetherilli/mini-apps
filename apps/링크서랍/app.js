@@ -16,7 +16,7 @@
  *      을 걸면 그 메뉴가 사라집니다. click 만 막고 contextmenu 는 건드리지 마십시오.
  *
  *  꾹 누르기가 두 가지인 까닭
- *    제목·주소 위        → 브라우저 메뉴 (시크릿)
+ *    제목 줄 위          → 브라우저 메뉴 (시크릿). 속성 화면에서는 주소도 같습니다
  *    그 밖의 카드 자리   → 여러 개 고르기
  *    자리를 나눠야 둘 다 삽니다.
  * ===================================================================== */
@@ -39,6 +39,25 @@ let chosen   = new Set();   /* 여러 개 고르기에서 고른 링크의 id */
 let choosing = false;       /* 여러 개 고르는 중인가 */
 let editMode = false;       /* 편집 모드 — 태그 자리에 휴지통이 뜹니다 */
 let sheetFor = null;        /* 태그 넣기 화면이 손보는 대상: "고른것" 또는 링크 id */
+
+/* 보는 방식 — 정렬과 태그 겹쳐 고르기. 이 브라우저에 따로 남겨 둡니다. */
+const VIEW = "링크서랍.보기";
+const SORTS = [
+  { k: "added",     label: "넣은 순" },
+  { k: "star-desc", label: "별점 높은 순" },
+  { k: "star-asc",  label: "별점 낮은 순" }
+];
+let sortBy = "added";
+let tagMode = "all";        /* all — 고른 태그를 모두 가진 것 · any — 하나라도 가진 것 */
+try {
+  const v = JSON.parse(localStorage.getItem(VIEW) || "{}");
+  if (SORTS.some(s => s.k === v.sortBy)) sortBy = v.sortBy;
+  if (v.tagMode === "any") tagMode = "any";
+} catch (e) { /* 없으면 기본값으로 */ }
+
+function saveView() {
+  try { localStorage.setItem(VIEW, JSON.stringify({ sortBy, tagMode })); } catch (e) { /* 그냥 둡니다 */ }
+}
 
 /* ── 자료 읽고 쓰기 ──────────────────────────────────────────────── */
 
@@ -70,6 +89,7 @@ function tidy(x) {
     url:   String(x.url || "").trim(),
     title: String(x.title || "").trim(),
     tags:  Array.isArray(x.tags) ? [...new Set(x.tags.map(t => String(t).trim()).filter(Boolean))] : [],
+    star:  Math.max(0, Math.min(5, Math.round(Number(x.star) || 0))),   /* 0 은 «안 먹였다» 입니다 */
     note:  String(x.note || ""),
     added: x.added || today()
   };
@@ -89,6 +109,33 @@ const byId = id => links.find(l => l.id === id);
 function host(url) {
   try { return new URL(url).host.replace(/^www\./, ""); }
   catch { return url; }
+}
+
+/* ── 별점 ────────────────────────────────────────────────────────── */
+/* 별 다섯 개. 먹인 별을 다시 누르면 0 으로 돌아갑니다 — 그래야 잘못 먹인 것을 뺄 수 있습니다. */
+
+function stars(x, big) {
+  const box = document.createElement("div");
+  box.className = "stars" + (big ? " d-stars" : "");
+  box.setAttribute("role", "group");
+  box.setAttribute("aria-label", "별점 " + x.star + "점");
+
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = i <= x.star ? "on" : "";
+    b.textContent = i <= x.star ? "★" : "☆";
+    b.setAttribute("aria-label", i + "점");
+    b.addEventListener("click", e => {
+      e.stopPropagation();
+      if (choosing) { toggleChoice(x.id); return; }   /* 고르는 중에는 고르기가 먼저입니다 */
+      x.star = (x.star === i) ? 0 : i;
+      save();
+      if ($("v-detail").hidden) drawList(); else drawDetail(x);
+    });
+    box.append(b);
+  }
+  return box;
 }
 
 /* 많이 쓴 태그부터 — 추천 줄과 거르기 줄이 함께 씁니다 */
@@ -137,8 +184,10 @@ function onHold(node, fn) {
     sx = e.clientX; sy = e.clientY;
     timer = setTimeout(() => {
       node._held = true;
-      /* 손끝에 한 번 울려 줍니다 — 안 되는 자리도 있으니 조용히 넘깁니다 */
-      try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* 그냥 둡니다 */ }
+      /* 손끝에 한 번 울려 줍니다. 손댄 적 없는 창에서는 크롬이 막고 콘솔에 적으므로 먼저 봅니다 */
+      try {
+        if (navigator.vibrate && navigator.userActivation?.hasBeenActive) navigator.vibrate(12);
+      } catch (e) { /* 그냥 둡니다 */ }
       fn();
     }, HOLD);
   });
@@ -161,12 +210,47 @@ function holdOnly(a) {
 
 function shown() {
   const q = $("q").value.trim().toLowerCase();
-  return links.filter(x => {
-    for (const t of picked) if (!x.tags.includes(t)) return false;
+
+  const rows = links.filter(x => {
+    if (picked.size) {
+      /* 모두 — 고른 태그를 다 가진 것만 · 아무거나 — 하나라도 가진 것 */
+      const hit = [...picked].filter(t => x.tags.includes(t)).length;
+      if (tagMode === "all" ? hit < picked.size : hit === 0) return false;
+    }
     if (!q) return true;
     return (x.title + " " + x.url + " " + x.note + " " + x.tags.join(" ")).toLowerCase().includes(q);
   });
+
+  /* 넣은 순은 links 의 차례 그대로입니다. 별점이 같으면 그 차례를 지킵니다. */
+  if (sortBy === "star-desc") rows.sort((a, b) => b.star - a.star);
+  if (sortBy === "star-asc")  rows.sort((a, b) => a.star - b.star);
+  return rows;
 }
+
+function drawToolbar() {
+  const s = SORTS.find(s => s.k === sortBy) || SORTS[0];
+  $("sort").textContent = s.label;
+
+  const mode = $("tagmode");
+  mode.hidden = picked.size < 2;      /* 하나만 골랐으면 둘이 같은 뜻입니다 */
+  mode.textContent = tagMode === "all" ? "모두 가진 것" : "하나라도 가진 것";
+
+  const n = shown().length;
+  $("count").textContent = n === links.length ? links.length + "개" : n + " / " + links.length + "개";
+}
+
+$("sort").addEventListener("click", () => {
+  const i = SORTS.findIndex(s => s.k === sortBy);
+  sortBy = SORTS[(i + 1) % SORTS.length].k;
+  saveView();
+  draw();
+});
+
+$("tagmode").addEventListener("click", () => {
+  tagMode = tagMode === "all" ? "any" : "all";
+  saveView();
+  draw();
+});
 
 function drawTagbar() {
   const count = tagCounts();
@@ -197,6 +281,7 @@ function chip(name, n, on, fn) {
 }
 
 function drawList() {
+  drawToolbar();            /* 센 개수와 단추 글이 함께 바뀝니다 */
   const rows = shown();
   const list = $("list");
   list.textContent = "";
@@ -227,15 +312,10 @@ function card(x) {
   holdOnly(a);
   body.append(a);
 
-  /* 둘째 줄 — 주소 */
-  const h = document.createElement("span");
-  h.className = "host";
-  h.textContent = host(x.url);
-  body.append(h);
-
-  /* 셋째 줄 — 태그 (편집 모드면 휴지통) */
+  /* 둘째 줄 — 별점과 태그가 나란히 섭니다 (편집 모드면 휴지통만) */
   const mini = document.createElement("div");
   mini.className = "mini";
+  if (!editMode) mini.append(stars(x, false));
   if (editMode) {
     const b = document.createElement("button");
     b.type = "button";
@@ -474,6 +554,8 @@ function drawDetail(x) {
   holdOnly(a);                    /* 여기서도 그냥 눌러서는 안 열립니다 */
   v.append(a);
 
+  v.append(stars(x, true));
+
   const tags = document.createElement("div");
   tags.className = "chips";
   tags.style.marginTop = "14px";
@@ -603,7 +685,8 @@ $("q").addEventListener("input", drawList);
 /* ── 내보내기·불러오기 ──────────────────────────────────────────── */
 
 $("export").addEventListener("click", () => {
-  const body = links.map(x => ({ id: x.id, url: x.url, title: x.title, tags: x.tags, note: x.note, added: x.added }));
+  const body = links.map(x => ({ id: x.id, url: x.url, title: x.title, tags: x.tags,
+                                 star: x.star, note: x.note, added: x.added }));
   const text =
     "/* 링크서랍 자료 — " + today() + " 에 내보냈습니다.\n" +
     " * 이 파일을 apps/링크서랍/data.js 에 덮으면 다음에 열 때 기본값이 됩니다. */\n" +

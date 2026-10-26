@@ -9,31 +9,36 @@
     color-scheme: light dark;
     --bg:#fff; --fg:#17171a; --dim:#6b6b73; --line:#e3e3e8;
     --card:#fafafa; --chip:#f0f0f3; --on:#17171a; --onfg:#fff;
-    --bad:#b3261e; --pick:#2f6df6; --pickbg:#eaf0ff;
+    --bad:#b3261e; --pick:#2f6df6; --pickbg:#eaf0ff; --star:#d79b00;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#0e0e11; --fg:#ececf0; --dim:#9a9aa4; --line:#26262c;
             --card:#17171b; --chip:#23232a; --on:#ececf0; --onfg:#0e0e11;
-            --bad:#f2b8b5; --pick:#8ab0ff; --pickbg:#1a2238; }
+            --bad:#f2b8b5; --pick:#8ab0ff; --pickbg:#1a2238; --star:#f0c040; }
   }
   * { box-sizing: border-box; }
-  body { margin:0; padding:20px 16px 96px; background:var(--bg); color:var(--fg);
-         font:16px/1.6 system-ui, "Malgun Gothic", sans-serif;
+  /* 글자는 작게 — 한 화면에 많이 들어오도록 (사용자 지침 2026-10-26).
+     누르는 자리는 그대로 44px 를 지킵니다. */
+  body { margin:0; padding:18px 14px 92px; background:var(--bg); color:var(--fg);
+         font:14px/1.55 system-ui, "Malgun Gothic", sans-serif;
          -webkit-text-size-adjust:100%; }
   main { max-width:620px; margin:0 auto; }
   [hidden] { display:none !important; }
 
-  a.back { display:inline-block; color:var(--dim); font-size:.85rem; text-decoration:none; }
-  .head { display:flex; align-items:center; gap:10px; margin:8px 0 2px; }
-  .head h1 { margin:0; font-size:1.45rem; letter-spacing:-.01em; flex:1; }
-  p.sub { margin:0 0 16px; color:var(--dim); font-size:.85rem; }
+  a.back { display:inline-block; color:var(--dim); font-size:.8rem; text-decoration:none; }
+  .head { display:flex; align-items:center; gap:8px; margin:8px 0 2px; }
+  .head h1 { margin:0; font-size:1.25rem; letter-spacing:-.01em; flex:1; }
+  p.sub { margin:0 0 14px; color:var(--dim); font-size:.78rem; }
+
+  .toolbar { display:flex; align-items:center; gap:6px; margin:0 0 10px; }
+  .toolbar .count { color:var(--dim); font-size:.76rem; margin-left:auto; }
 
   button, input, textarea { font:inherit; color:inherit; }
   button { min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:10px;
            background:transparent; cursor:pointer; }
   button:hover { border-color:var(--dim); }
   button.go { background:var(--on); color:var(--onfg); border-color:var(--on); font-weight:600; }
-  button.small { min-height:36px; padding:0 10px; font-size:.85rem; }
+  button.small { min-height:34px; padding:0 10px; font-size:.8rem; }
   button.bad { color:var(--bad); }
   button[aria-pressed="true"] { background:var(--on); color:var(--onfg); border-color:var(--on); }
 
@@ -45,29 +50,37 @@
   .chips { display:flex; flex-wrap:wrap; gap:6px; }
   .chips:empty { display:none; }
   #tagbar { margin:0 0 14px; }
-  .tag { min-height:34px; padding:0 11px; border-radius:999px; border:1px solid var(--line);
-         background:var(--chip); font-size:.85rem; cursor:pointer; }
-  .tag .n { color:var(--dim); margin-left:4px; font-size:.78rem; }
+  .tag { min-height:32px; padding:0 10px; border-radius:999px; border:1px solid var(--line);
+         background:var(--chip); font-size:.78rem; cursor:pointer; }
+  .tag .n { color:var(--dim); margin-left:4px; font-size:.72rem; }
   .tag[aria-pressed="true"] .n { color:inherit; opacity:.65; }
 
   /* ── 카드 ── */
   #list { display:grid; gap:10px; margin:0; padding:0; list-style:none; }
   li.row { display:flex; align-items:stretch; gap:8px;
-           padding:12px 10px 12px 14px; border:1px solid var(--line); border-radius:12px;
+           padding:10px 8px 10px 12px; border:1px solid var(--line); border-radius:11px;
            background:var(--card); }
   li.row.on { border-color:var(--pick); background:var(--pickbg); }
   .body { flex:1; min-width:0; -webkit-user-select:none; user-select:none; cursor:pointer; }
   /* 제목 줄만 진짜 링크입니다 — 길게 누르기 메뉴(시크릿)가 여기 삽니다 */
-  .t { display:block; font-weight:600; color:inherit; text-decoration:none;
+  .t { display:block; font-weight:600; font-size:.92rem; color:inherit; text-decoration:none;
        overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
        -webkit-user-select:auto; user-select:auto; }
   .t:hover { text-decoration:underline; }
-  .host { display:block; color:var(--dim); font-size:.82rem;
-          overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .mini { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; align-items:center; }
-  .mini span { padding:2px 8px; border-radius:999px; background:var(--chip);
-               color:var(--dim); font-size:.78rem; }
+  .mini { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; align-items:center; }
+  .mini span { padding:1px 7px; border-radius:999px; background:var(--chip);
+               color:var(--dim); font-size:.72rem; }
   .mini span.more { background:transparent; }
+
+  /* 별점 — 태그와 같은 줄에 섭니다 */
+  .stars { display:inline-flex; flex:0 0 auto; margin-right:3px; }
+  .stars button { min-height:0; padding:3px 1px; border:0; background:none;
+                  color:var(--dim); font-size:1.02rem; line-height:1; }
+  .stars button.on { color:var(--star); }
+  .stars button:hover { border:0; }
+  /* 속성 화면의 별점 — 링크 줄 아래에 제 줄로 섭니다 */
+  .d-stars { display:flex; margin:10px 0 0; }
+  .d-stars button { padding:5px 4px; font-size:1.45rem; }
   .side { display:flex; align-items:center; padding-left:2px; color:var(--dim); }
   .side .go-in { font-size:1.3rem; line-height:1; }
   .side .mark { font-size:1.1rem; color:var(--pick); }
@@ -89,17 +102,18 @@
   .reco-head { margin:0; font-size:.78rem; color:var(--dim); }
 
   /* ── 속성 화면 ── */
-  #v-detail h1 { font-size:1.3rem; margin:10px 0 4px; overflow-wrap:anywhere; }
-  .d-url { display:inline-block; color:var(--pick); overflow-wrap:anywhere; font-size:.9rem; }
-  .d-note { white-space:pre-wrap; margin:14px 0 0; }
-  .d-meta { color:var(--dim); font-size:.82rem; margin:14px 0 0; }
-  .d-btns { display:flex; gap:8px; margin-top:20px; }
-  .d-btns button { flex:1; }
+  #v-detail h1 { font-size:1.15rem; margin:10px 0 4px; overflow-wrap:anywhere; }
+  /* 링크 줄과 별점 줄은 따로 섭니다 (사용자 지침 2026-10-26) */
+  .d-url { display:block; color:var(--pick); overflow-wrap:anywhere; font-size:.84rem; }
+  .d-note { white-space:pre-wrap; margin:14px 0 0; font-size:.9rem; }
+  .d-meta { color:var(--dim); font-size:.76rem; margin:12px 0 0; }
+  .d-btns { display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+  .d-btns button { flex:1 1 calc(33.33% - 6px); white-space:nowrap; }
 
   footer { margin-top:28px; padding-top:16px; border-top:1px solid var(--line); }
   footer .btns { display:flex; flex-wrap:wrap; gap:8px; }
   footer .btns button { flex:1 1 calc(50% - 4px); }
-  footer p { margin:10px 0 0; color:var(--dim); font-size:.8rem; }
+  footer p { margin:10px 0 0; color:var(--dim); font-size:.75rem; }
   .msgbox:empty { display:none; }
   .msgbox { margin-top:10px; padding:9px 12px; border:1px solid var(--line);
             border-radius:9px; font-size:.85rem; }
@@ -138,7 +152,7 @@
       <button id="edit" class="small" aria-pressed="false">편집</button>
       <button id="add" class="go">＋</button>
     </div>
-    <p class="sub">카드를 누르면 속성, 꾹 누르면 여러 개 고르기. 링크는 <b>길게 눌러</b> 시크릿 탭으로 엽니다.</p>
+    <p class="sub">카드를 누르면 속성, 꾹 누르면 여러 개 고르기. 제목을 <b>길게 눌러</b> 시크릿 탭으로 엽니다.</p>
 
     <div class="bar">
       <input id="q" type="search" placeholder="제목·주소·메모·태그 찾기" autocomplete="off">
@@ -167,6 +181,11 @@
       </div>
     </form>
 
+    <div class="toolbar">
+      <button class="small" id="sort">넣은 순</button>
+      <button class="small" id="tagmode" hidden>모두 가진 것</button>
+      <span class="count" id="count"></span>
+    </div>
     <div class="chips" id="tagbar"></div>
     <ul id="list"></ul>
 
