@@ -1,0 +1,9 @@
+# 이 컴퓨터에서만 쓰는 클로드 설정 (허용 목록 등)
+.claude/settings.local.json
+
+# 윈도우가 만드는 부스러기
+Thumbs.db
+desktop.ini
+
+# 손질 전 원본·중간 산출물 — 저장소에 올리지 않습니다
+temp/
