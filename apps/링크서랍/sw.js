@@ -12,7 +12,7 @@
  *  저장(localStorage)은 여기서 건드리지 않습니다 — 캐시를 지워도 모은 링크는
  *  그대로 남습니다.
  * ===================================================================== */
-const CACHE = "링크서랍-v1.1.0";
+const CACHE = "링크서랍-v1.1.1";
 
 self.addEventListener("install", () => self.skipWaiting());
 
