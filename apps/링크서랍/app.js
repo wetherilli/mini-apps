@@ -24,7 +24,7 @@
 /* 판 번호 — index.html 의 ?v= 와 같아야 합니다. 화면 맨 아래에 떠서, 고친 것이
    안 보일 때 «옛 판이 캐시에서 나오고 있다» 를 바로 알 수 있습니다.
    손으로 고치지 말고 `node tools/판올리기.js 링크서랍` 을 쓰십시오. */
-const VERSION = "1.0.2";
+const VERSION = "1.0.3";
 
 const KEY = "링크서랍.자료";   /* 열쇠 앞에 앱 이름 — 다른 앱의 저장을 덮지 않습니다 */
 const V   = 1;                 /* 저장 모양 판 번호 */
@@ -46,10 +46,10 @@ let choosing = false;       /* 여러 개 고르는 중인가 */
 let editMode = false;       /* 편집 모드 — 태그 자리에 휴지통이 뜹니다 */
 let sheetFor = null;        /* 태그 넣기 화면이 손보는 대상: "고른것" 또는 링크 id */
 
-/* 몇 줄까지 그려 두었나. 걸러 보는 것이 바뀌면 다시 50 부터입니다 —
-   안 그러면 엉뚱하게 「더 보기」 를 눌러 둔 채로 다른 태그를 봅니다. */
-let 보인줄 = PAGE;
-const 처음부터 = () => { 보인줄 = PAGE; };
+/* 지금 보고 있는 쪽. 걸러 보는 것이 바뀌면 1쪽으로 돌아갑니다 —
+   안 그러면 엉뚱하게 5쪽을 펴 둔 채로 다른 태그를 봅니다. */
+let 쪽 = 1;
+const 처음부터 = () => { 쪽 = 1; };
 
 /* 보는 방식 — 정렬과 태그 겹쳐 고르기. 이 브라우저에 따로 남겨 둡니다. */
 const VIEW = "링크서랍.보기";
@@ -247,8 +247,9 @@ function drawToolbar() {
   mode.textContent = tagMode === "all" ? "모두 가진 것" : "하나라도 가진 것";
 
   const n = shown().length;
-  const 보임 = Math.min(보인줄, n);
-  $("count").textContent = 보임 < n          ? `${보임} / ${n}개`
+  const 처음 = (쪽 - 1) * PAGE + 1;
+  const 끝   = Math.min(쪽 * PAGE, n);
+  $("count").textContent = n > PAGE          ? `${처음}–${끝} / ${n}개`
                          : n < links.length  ? `${n} / ${links.length}개`
                                              : `${n}개`;
 }
@@ -298,10 +299,15 @@ function chip(name, n, on, fn) {
 }
 
 function drawList() {
-  drawToolbar();            /* 센 개수와 단추 글이 함께 바뀝니다 */
   const rows = shown();
+  /* 지우고 나서 마지막 쪽이 비었을 수 있습니다 — 있는 쪽으로 끌어당깁니다 */
+  const 총쪽 = Math.max(1, Math.ceil(rows.length / PAGE));
+  if (쪽 > 총쪽) 쪽 = 총쪽;
+
+  drawToolbar();            /* 센 개수와 단추 글이 함께 바뀝니다 */
   const list = $("list");
   list.textContent = "";
+  $("pager").textContent = "";
 
   if (!rows.length) {
     const d = document.createElement("li");
@@ -311,23 +317,54 @@ function drawList() {
     return;
   }
 
-  for (const x of rows.slice(0, 보인줄)) list.append(card(x));
+  /* 한 쪽에 PAGE 줄만 그립니다 — 한꺼번에 다 그리면 많아질수록 느려집니다 */
+  for (const x of rows.slice((쪽 - 1) * PAGE, 쪽 * PAGE)) list.append(card(x));
 
-  /* 남은 것이 있으면 「더 보기」 — 한꺼번에 다 그리면 많아질수록 느려집니다 */
-  const 남은 = rows.length - 보인줄;
-  if (남은 > 0) {
-    const li = document.createElement("li");
+  drawPager(총쪽);
+}
+
+/* ‹ 1 2 3 … 9 ›  — 좁은 화면에 다 깔 수 없으니 지금 쪽 둘레만 적고 나머지는 … 로 */
+function drawPager(총쪽) {
+  const box = $("pager");
+  box.textContent = "";
+  if (총쪽 <= 1) return;
+
+  const 단추 = (글, 갈곳, { 지금 = false, 못눌러 = false } = {}) => {
     const b = document.createElement("button");
     b.type = "button";
-    b.className = "more";
-    b.textContent = `더 보기 — ${Math.min(PAGE, 남은)}개 (남은 ${남은}개)`;
-    b.addEventListener("click", () => {
-      보인줄 += PAGE;
-      drawList();
-    });
-    li.append(b);
-    list.append(li);
+    b.textContent = 글;
+    if (지금) b.setAttribute("aria-current", "page");
+    if (못눌러) b.disabled = true;
+    else b.addEventListener("click", () => 쪽넘기기(갈곳));
+    box.append(b);
+  };
+  const 사이 = () => {
+    const s = document.createElement("span");
+    s.className = "gap";
+    s.textContent = "…";
+    box.append(s);
+  };
+
+  단추("‹", 쪽 - 1, { 못눌러: 쪽 === 1 });
+
+  /* 1쪽·끝쪽은 늘 보이고, 가운데는 지금 쪽 ±1 만 */
+  const 적을쪽 = new Set([1, 총쪽, 쪽 - 1, 쪽, 쪽 + 1]);
+  let 앞 = 0;
+  for (let i = 1; i <= 총쪽; i++) {
+    if (!적을쪽.has(i)) continue;
+    if (i - 앞 > 1) 사이();
+    단추(String(i), i, { 지금: i === 쪽 });
+    앞 = i;
   }
+
+  단추("›", 쪽 + 1, { 못눌러: 쪽 === 총쪽 });
+}
+
+function 쪽넘기기(갈곳) {
+  쪽 = 갈곳;
+  drawList();
+  /* 쪽을 넘기면 목록 머리로 올립니다 — 안 그러면 새 쪽의 한가운데에 서 있게 됩니다 */
+  $("list").scrollIntoView({ block: "start" });
 }
 
 function card(x) {
