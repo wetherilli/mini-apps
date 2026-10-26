@@ -24,12 +24,13 @@
 /* 판 번호 — index.html 의 ?v= 와 같아야 합니다. 화면 맨 아래에 떠서, 고친 것이
    안 보일 때 «옛 판이 캐시에서 나오고 있다» 를 바로 알 수 있습니다.
    손으로 고치지 말고 `node tools/판올리기.js 링크서랍` 을 쓰십시오. */
-const VERSION = "1.0.1";
+const VERSION = "1.0.2";
 
 const KEY = "링크서랍.자료";   /* 열쇠 앞에 앱 이름 — 다른 앱의 저장을 덮지 않습니다 */
 const V   = 1;                 /* 저장 모양 판 번호 */
 const HOLD = 500;              /* 꾹 누르기로 치는 시간(ms) */
 const CARD_TAGS = 3;           /* 카드에 보이는 태그 수 — 넘치면 +N */
+const PAGE = 50;               /* 한 번에 보이는 줄 수 — 「더 보기」 가 이만큼씩 늘립니다 */
 
 /* 아래 load() 가 곧바로 쓰므로 먼저 세웁니다 */
 const newId = () => (crypto.randomUUID ? crypto.randomUUID()
@@ -44,6 +45,11 @@ let chosen   = new Set();   /* 여러 개 고르기에서 고른 링크의 id */
 let choosing = false;       /* 여러 개 고르는 중인가 */
 let editMode = false;       /* 편집 모드 — 태그 자리에 휴지통이 뜹니다 */
 let sheetFor = null;        /* 태그 넣기 화면이 손보는 대상: "고른것" 또는 링크 id */
+
+/* 몇 줄까지 그려 두었나. 걸러 보는 것이 바뀌면 다시 50 부터입니다 —
+   안 그러면 엉뚱하게 「더 보기」 를 눌러 둔 채로 다른 태그를 봅니다. */
+let 보인줄 = PAGE;
+const 처음부터 = () => { 보인줄 = PAGE; };
 
 /* 보는 방식 — 정렬과 태그 겹쳐 고르기. 이 브라우저에 따로 남겨 둡니다. */
 const VIEW = "링크서랍.보기";
@@ -241,19 +247,24 @@ function drawToolbar() {
   mode.textContent = tagMode === "all" ? "모두 가진 것" : "하나라도 가진 것";
 
   const n = shown().length;
-  $("count").textContent = n === links.length ? links.length + "개" : n + " / " + links.length + "개";
+  const 보임 = Math.min(보인줄, n);
+  $("count").textContent = 보임 < n          ? `${보임} / ${n}개`
+                         : n < links.length  ? `${n} / ${links.length}개`
+                                             : `${n}개`;
 }
 
 $("sort").addEventListener("click", () => {
   const i = SORTS.findIndex(s => s.k === sortBy);
   sortBy = SORTS[(i + 1) % SORTS.length].k;
   saveView();
+  처음부터();
   draw();
 });
 
 $("tagmode").addEventListener("click", () => {
   tagMode = tagMode === "all" ? "any" : "all";
   saveView();
+  처음부터();
   draw();
 });
 
@@ -264,6 +275,7 @@ function drawTagbar() {
   for (const [t, n] of count) {
     box.append(chip(t, n, picked.has(t), () => {
       if (picked.has(t)) picked.delete(t); else picked.add(t);
+      처음부터();
       draw();
     }));
   }
@@ -299,7 +311,23 @@ function drawList() {
     return;
   }
 
-  for (const x of rows) list.append(card(x));
+  for (const x of rows.slice(0, 보인줄)) list.append(card(x));
+
+  /* 남은 것이 있으면 「더 보기」 — 한꺼번에 다 그리면 많아질수록 느려집니다 */
+  const 남은 = rows.length - 보인줄;
+  if (남은 > 0) {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "more";
+    b.textContent = `더 보기 — ${Math.min(PAGE, 남은)}개 (남은 ${남은}개)`;
+    b.addEventListener("click", () => {
+      보인줄 += PAGE;
+      drawList();
+    });
+    li.append(b);
+    list.append(li);
+  }
 }
 
 function card(x) {
@@ -567,6 +595,7 @@ function drawDetail(x) {
   for (const t of x.tags) {
     tags.append(chip(t, null, false, () => {   /* 태그를 누르면 그 태그로 걸러 봅니다 */
       picked = new Set([t]);
+      처음부터();
       location.hash = "#";
     }));
   }
@@ -685,7 +714,7 @@ async function copy(text) {
   catch { say("베끼지 못했습니다 — 주소를 길게 눌러 베끼십시오."); }
 }
 
-$("q").addEventListener("input", drawList);
+$("q").addEventListener("input", () => { 처음부터(); drawList(); });
 
 /* ── 내보내기·불러오기 ──────────────────────────────────────────── */
 
@@ -716,6 +745,7 @@ $("file").addEventListener("change", async () => {
     if (confirm("지금 있는 " + links.length + "개를 불러온 " + got.length + "개로 바꿉니다. 계속할까요?")) {
       links = got;
       picked.clear();
+      처음부터();
       stopChoosing();
       save();
       draw();
@@ -763,6 +793,7 @@ $("reset").addEventListener("click", () => {
   localStorage.removeItem(KEY);
   links = load();
   picked.clear();
+  처음부터();
   stopChoosing();
   draw();
   say("처음 자료로 되돌렸습니다.");
