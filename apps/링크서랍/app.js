@@ -734,8 +734,27 @@ function parseSeed(text) {
   return got.map(tidy).filter(x => x.url);
 }
 
+/* 되돌리기는 쌓아 둔 것을 통째로 버립니다 — 한 번에 되지 않고 두 번 눌러야 합니다
+   (사용자 지침 2026-10-26). 첫 번째 누름은 단추 글만 바꾸고, 5초 안에 다시 눌러야
+   실제로 지웁니다. 잘못 누른 사람은 그냥 기다리면 됩니다. */
+let resetArmed = null;
+
+function disarmReset() {
+  clearTimeout(resetArmed);
+  resetArmed = null;
+  $("reset").textContent = "처음 자료로 되돌리기";
+  $("reset").classList.remove("armed");
+}
+
 $("reset").addEventListener("click", () => {
-  if (!confirm("이 브라우저에 쌓은 것을 버리고 data.js 의 처음 자료로 돌아갑니다. 계속할까요?")) return;
+  if (!resetArmed) {
+    $("reset").textContent = "정말요? 한 번 더";
+    $("reset").classList.add("armed");
+    resetArmed = setTimeout(disarmReset, 5000);
+    say("쌓아 둔 " + links.length + "개를 버리고 data.js 의 처음 자료로 돌아갑니다. 그만두려면 그냥 두십시오.");
+    return;
+  }
+  disarmReset();
   localStorage.removeItem(KEY);
   links = load();
   picked.clear();

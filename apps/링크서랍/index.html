@@ -42,6 +42,8 @@
   button.go { background:var(--on); color:var(--onfg); border-color:var(--on); font-weight:600; }
   button.small { min-height:30px; padding:0 9px; font-size:.86rem; }
   button.bad { color:var(--bad); }
+  /* 두 번 눌러야 하는 단추가 «한 번 눌린» 꼴 */
+  button.armed { border-color:var(--bad); font-weight:600; }
   button[aria-pressed="true"] { background:var(--on); color:var(--onfg); border-color:var(--on); }
 
   .bar { display:flex; gap:8px; margin-bottom:12px; }
