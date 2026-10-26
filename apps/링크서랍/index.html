@@ -34,23 +34,25 @@
   .toolbar .count { color:var(--dim); font-size:.82rem; margin-left:auto; }
 
   button, input, textarea { font:inherit; color:inherit; }
-  button { min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:10px;
+  /* 누르는 자리도 글자에 맞춰 줄였습니다(사용자 지침 2026-10-26).
+     터치 권장치는 44px 이라, 더 줄이면 손가락으로 집기 어려워집니다. */
+  button { min-height:36px; padding:0 12px; border:1px solid var(--line); border-radius:9px;
            background:transparent; cursor:pointer; }
   button:hover { border-color:var(--dim); }
   button.go { background:var(--on); color:var(--onfg); border-color:var(--on); font-weight:600; }
-  button.small { min-height:34px; padding:0 10px; font-size:.86rem; }
+  button.small { min-height:30px; padding:0 9px; font-size:.86rem; }
   button.bad { color:var(--bad); }
   button[aria-pressed="true"] { background:var(--on); color:var(--onfg); border-color:var(--on); }
 
   .bar { display:flex; gap:8px; margin-bottom:12px; }
-  .bar input { flex:1; min-height:44px; padding:0 12px; border:1px solid var(--line);
-               border-radius:10px; background:var(--card); }
+  .bar input { flex:1; min-height:36px; padding:0 11px; border:1px solid var(--line);
+               border-radius:9px; background:var(--card); }
 
   /* 태그 칩 — 거르기 줄과 추천 줄이 같은 모양을 씁니다 */
   .chips { display:flex; flex-wrap:wrap; gap:6px; }
   .chips:empty { display:none; }
   #tagbar { margin:0 0 14px; }
-  .tag { min-height:32px; padding:0 10px; border-radius:999px; border:1px solid var(--line);
+  .tag { min-height:28px; padding:0 10px; border-radius:999px; border:1px solid var(--line);
          background:var(--chip); font-size:.84rem; cursor:pointer; }
   .tag .n { color:var(--dim); margin-left:4px; font-size:.78rem; }
   .tag[aria-pressed="true"] .n { color:inherit; opacity:.65; }
@@ -84,8 +86,8 @@
   .side { display:flex; align-items:center; padding-left:2px; color:var(--dim); }
   .side .go-in { font-size:1.3rem; line-height:1; }
   .side .mark { font-size:1.1rem; color:var(--pick); }
-  button.trash { min-height:34px; padding:0 10px; border-radius:999px; color:var(--bad);
-                 border-color:var(--line); font-size:.85rem; }
+  button.trash { min-height:28px; padding:0 10px; border-radius:999px; color:var(--bad);
+                 border-color:var(--line); font-size:.82rem; }
 
   .empty { padding:20px 16px; border:1px dashed var(--line); border-radius:12px;
            color:var(--dim); text-align:center; }
@@ -94,9 +96,9 @@
   form.panel { margin:0 0 14px; padding:14px; border:1px solid var(--line); border-radius:12px;
                background:var(--card); display:grid; gap:10px; }
   form.panel label { display:grid; gap:4px; font-size:.85rem; color:var(--dim); }
-  form.panel input, form.panel textarea { padding:9px 11px; border:1px solid var(--line);
-                                          border-radius:9px; background:var(--bg); }
-  form.panel textarea { min-height:64px; resize:vertical; }
+  form.panel input, form.panel textarea { padding:7px 10px; border:1px solid var(--line);
+                                          border-radius:8px; background:var(--bg); }
+  form.panel textarea { min-height:56px; resize:vertical; }
   form.panel .btns { display:flex; gap:8px; }
   form.panel .btns button { flex:1; }
   .reco-head { margin:0; font-size:.78rem; color:var(--dim); }
@@ -136,7 +138,7 @@
   }
   #sheet h2 { margin:0; font-size:1.1rem; }
   #sheet p { margin:0; color:var(--dim); font-size:.85rem; }
-  #sheet input { padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--card); }
+  #sheet input { padding:8px 11px; border:1px solid var(--line); border-radius:9px; background:var(--card); }
   #sheet .btns { display:flex; gap:8px; }
   #sheet .btns button { flex:1; }
 </style>
