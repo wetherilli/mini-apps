@@ -4,6 +4,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0e0e11">
 <title>링크서랍</title>
+<!-- 홈 화면에 앉히기(앱으로 설치). https 에서만 뜹니다 — file:// 나 http 로 열면 안 뜹니다. -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon/icon-192.png">
 <style>
   :root {
     color-scheme: light dark;
@@ -254,7 +257,7 @@
      주소가 갈리므로 새 파일을 받습니다.
      ■ 손으로 고치지 말고 `node tools/판올리기.js 링크서랍` 을 쓰십시오 —
        app.js 의 VERSION 과 여기 세 자리를 함께 맞춥니다. -->
-<script src="data.js?v=1.0.3"></script>
-<script src="app.js?v=1.0.3"></script>
+<script src="data.js?v=1.1.0"></script>
+<script src="app.js?v=1.1.0"></script>
 </body>
 </html>

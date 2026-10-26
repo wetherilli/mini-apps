@@ -24,6 +24,7 @@ const path = require("path");
 const APPS = path.join(__dirname, "..", "apps");
 const RE_V   = /(\?v=)(\d+\.\d+\.\d+)/g;
 const RE_VER = /(const VERSION\s*=\s*")(\d+\.\d+\.\d+)(")/;
+const RE_SW  = /(const CACHE\s*=\s*"[^"]*-v)(\d+\.\d+\.\d+)(")/;
 
 function bump(v, how) {
   if (/^\d+\.\d+\.\d+$/.test(how)) return how;
@@ -59,17 +60,18 @@ function 올리기(name, how) {
   s = s.replace(RE_V, `$1${새}`);
   fs.writeFileSync(html, s);
 
-  const js = path.join(dir, "app.js");
-  let 같이 = "";
-  if (fs.existsSync(js)) {
-    const t = fs.readFileSync(js, "utf8");
-    if (RE_VER.test(t)) {
-      fs.writeFileSync(js, t.replace(RE_VER, `$1${새}$3`));
-      같이 = " · app.js 의 VERSION 도";
-    }
+  /* app.js 의 VERSION 과 sw.js 의 캐시 이름도 함께 — 어긋나면 더 헷갈립니다 */
+  const 같이 = [];
+  for (const [파일, 자] of [["app.js", RE_VER], ["sw.js", RE_SW]]) {
+    const f = path.join(dir, 파일);
+    if (!fs.existsSync(f)) continue;
+    const t = fs.readFileSync(f, "utf8");
+    if (!자.test(t)) continue;
+    fs.writeFileSync(f, t.replace(자, `$1${새}$3`));
+    같이.push(파일);
   }
 
-  console.log(`  ${name}  ${옛} → ${새}   (?v= ${found.length}자리${같이})`);
+  console.log(`  ${name}  ${옛} → ${새}   (?v= ${found.length}자리${같이.length ? " · " + 같이.join(" · ") : ""})`);
   return true;
 }
 

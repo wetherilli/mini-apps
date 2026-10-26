@@ -60,6 +60,10 @@ s = s.replace(/<script src="([^"]+?\.js)(\?v=[^"]*)?"><\/script>/g, (whole, src)
 /* 혼자 도는 파일에는 갈 「앱 목록」 이 없습니다 */
 s = s.replace(/\s*<a class="back"[^>]*>[^<]*<\/a>/, "");
 
+/* 앱으로 설치하는 길(manifest·아이콘)은 쪽 파일이 있어야 합니다 — 한 장짜리에는 없습니다.
+   남겨 두면 열 때마다 404 가 납니다. 설치는 웹에 올린 판에서 하십시오. */
+s = s.replace(/\s*<link rel="(manifest|apple-touch-icon)"[^>]*>/g, "");
+
 /* 머리말 */
 s = s.replace(/^<!doctype html>/i,
   `<!doctype html>\n<!-- ${name} ${판} — ${new Date().toISOString().slice(0, 10)} 에 한 장으로 묶었습니다.\n` +

@@ -24,7 +24,7 @@
 /* 판 번호 — index.html 의 ?v= 와 같아야 합니다. 화면 맨 아래에 떠서, 고친 것이
    안 보일 때 «옛 판이 캐시에서 나오고 있다» 를 바로 알 수 있습니다.
    손으로 고치지 말고 `node tools/판올리기.js 링크서랍` 을 쓰십시오. */
-const VERSION = "1.0.3";
+const VERSION = "1.1.0";
 
 const KEY = "링크서랍.자료";   /* 열쇠 앞에 앱 이름 — 다른 앱의 저장을 덮지 않습니다 */
 const V   = 1;                 /* 저장 모양 판 번호 */
@@ -848,3 +848,9 @@ function say(text) {
 
 $("ver").textContent = VERSION;
 route();
+
+/* 앱으로 설치해 두면 인터넷 없이도 열립니다. https 에서만 돕니다 —
+   한 장으로 묶은 판(file://)이나 미리보기(http)에서는 조용히 넘어갑니다. */
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(e => console.warn("서비스 워커를 세우지 못했습니다.", e)));
+}
