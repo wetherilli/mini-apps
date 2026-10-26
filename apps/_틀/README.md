@@ -10,3 +10,7 @@ cp -r apps/_틀 "apps/<앱이름>"
 
 베낀 뒤 고치는 곳 — `index.html` 의 `<title>`·`<h1>`, `app.js` 머리말, 이 README,
 그리고 뿌리 `index.html` 의 앱 목록과 뿌리 README 의 「앱 목록」 표.
+
+`index.html` 의 `?v=1.0.0` 과 `app.js` 의 `const VERSION` 은 **그대로 두십시오.**
+캐시 갈이용 판 번호이고, 고친 뒤에는 `node tools/판올리기.js <앱이름>` 이 올려 줍니다.
+화면 맨 아래에 그 번호가 뜹니다 — 그것이 캐시가 묵었는지 알아보는 길입니다.

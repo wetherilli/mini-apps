@@ -209,6 +209,7 @@
         고친 것은 이 브라우저에 남습니다. 다른 기기로 옮기거나 저장소에 넣으려면
         「내보내기」로 받은 <code>data.js</code> 를 이 앱 폴더에 덮으십시오.
       </p>
+      <p>판 <span id="ver">—</span></p>
     </footer>
   </section>
 
@@ -238,7 +239,13 @@
 </div>
 
 <input id="file" type="file" accept=".js,.json,text/javascript,application/json" hidden>
-<script src="data.js"></script>
-<script src="app.js"></script>
+
+<!-- 주소 뒤의 ?v= 는 캐시 갈이입니다. 브라우저는 주소가 같으면 받아 둔 옛 파일을
+     한참 더 씁니다 — 고쳐도 안 바뀌어 보이는 까닭이 그것입니다. 판이 오를 때마다
+     주소가 갈리므로 새 파일을 받습니다.
+     ■ 손으로 고치지 말고 `node tools/판올리기.js 링크서랍` 을 쓰십시오 —
+       app.js 의 VERSION 과 여기 세 자리를 함께 맞춥니다. -->
+<script src="data.js?v=1.0.1"></script>
+<script src="app.js?v=1.0.1"></script>
 </body>
 </html>

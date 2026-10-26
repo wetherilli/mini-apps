@@ -15,6 +15,7 @@
   a.back { display:inline-block; margin-bottom:24px; color:var(--dim); font-size:.9rem; }
   button { font:inherit; padding:8px 14px; border:1px solid var(--line); border-radius:8px;
            background:transparent; color:inherit; cursor:pointer; }
+  .ver { margin-top:28px; color:var(--dim); font-size:.8rem; }
 </style>
 
 <main>
@@ -23,6 +24,10 @@
 
   <p id="out">여기에 결과를 띄웁니다.</p>
   <button id="go">눌러 보기</button>
+
+  <p class="ver">판 <span id="ver">—</span></p>
 </main>
 
-<script src="app.js"></script>
+<!-- ?v= 는 캐시 갈이입니다 — 고친 뒤 `node tools/판올리기.js <앱이름>` 이 올려 줍니다.
+     손으로 고치지 마십시오(app.js 의 VERSION 과 어긋납니다). -->
+<script src="app.js?v=1.0.0"></script>
